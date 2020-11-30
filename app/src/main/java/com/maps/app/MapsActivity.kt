@@ -140,4 +140,16 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
             }
          }
      }
+
+    fun buttonAddMarker(view: View){
+        var intent = Intent(this,FormActivity::class.java);
+        startActivityForResult(intent,1)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        var cont = data?.getSerializableExtra("data") as Array<Double>
+        var myLocation = LatLng(cont[0] , cont[1]);
+        mMap.addMarker( MarkerOptions().position( myLocation ).title( "" ) );
+    }
 }
