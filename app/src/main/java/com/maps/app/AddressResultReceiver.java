@@ -8,7 +8,7 @@ import android.support.v4.os.ResultReceiver;
 /**
  * @author Santiago Carrillo
  */
-@SuppressLint( "ParcelCreator" )
+@SuppressLint({"ParcelCreator", "RestrictedApi"})
 public class AddressResultReceiver
         extends ResultReceiver
 {

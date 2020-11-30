@@ -8,11 +8,11 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.Handler
 import android.view.View
+import android.widget.TextView
 import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import com.google.android.gms.location.FusedLocationProviderClient
 import com.google.android.gms.location.LocationServices
-
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
@@ -24,12 +24,14 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
     private lateinit var fusedLocationClient: FusedLocationProviderClient
+    private lateinit var address:TextView;
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
         supportActionBar?.hide()
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        address =findViewById(R.id.address);
         fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
@@ -47,11 +49,12 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
      */
     override fun onMapReady(googleMap: GoogleMap) {
         mMap = googleMap
+        showMyCurrentLocation()
 
         // Add a marker in Sydney and move the camera
-        val sydney = LatLng(-34.0, 151.0)
-        mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
-        mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
+        //val sydney = LatLng(-34.0, 151.0)
+        //mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
+        //mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
 
     fun clickButtonLocation(view:View){
@@ -120,11 +123,21 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
      @SuppressLint("MissingPermission")
      fun startFetchAddressIntentService(){
-         fusedLocationClient.lastLocation.addOnSuccessListener(this) {
-             location:Location->{
-             var addressResultReceiver = AddressResultReceiver( Handler())
-             print("--------------------------------------"+location.toString())
-         }
+         fusedLocationClient.lastLocation.addOnSuccessListener {
+            if (it!=null){
+                var addressResultReceiver = AddressResultReceiver( Handler() );
+                addressResultReceiver.setAddressResultListener {
+                    var res = it
+                    runOnUiThread {
+                        address.text = res
+                        address.visibility = View.VISIBLE
+                    }
+                }
+                var intent =  Intent( this, FetchAddressIntentService::class.java )
+                intent.putExtra( FetchAddressIntentService.RECEIVER, addressResultReceiver )
+                intent.putExtra( FetchAddressIntentService.LOCATION_DATA_EXTRA, it);
+                startService( intent );
+            }
          }
      }
 }

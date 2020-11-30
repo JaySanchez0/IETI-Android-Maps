@@ -1,5 +1,6 @@
 package com.maps.app;
 
+import android.annotation.SuppressLint;
 import android.app.IntentService;
 import android.content.Intent;
 import android.location.Address;
@@ -106,7 +107,8 @@ public class FetchAddressIntentService
         }
     }
 
-    private void deliverResultToReceiver( int resultCode, String message )
+    @SuppressLint("RestrictedApi")
+    private void deliverResultToReceiver(int resultCode, String message )
     {
         Bundle bundle = new Bundle();
         bundle.putString( RESULT_DATA_KEY, message );
