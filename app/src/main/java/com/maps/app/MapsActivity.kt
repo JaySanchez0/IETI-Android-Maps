@@ -1,7 +1,17 @@
 package com.maps.app
 
+import android.annotation.SuppressLint
+import android.content.Intent
+import android.content.pm.PackageManager
+import android.location.Location
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.os.Handler
+import android.view.View
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
+import com.google.android.gms.location.FusedLocationProviderClient
+import com.google.android.gms.location.LocationServices
 
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
@@ -13,11 +23,14 @@ import com.google.android.gms.maps.model.MarkerOptions
 class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
 
     private lateinit var mMap: GoogleMap
+    private lateinit var fusedLocationClient: FusedLocationProviderClient
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_maps)
+        supportActionBar?.hide()
         // Obtain the SupportMapFragment and get notified when the map is ready to be used.
+        fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
         val mapFragment = supportFragmentManager
                 .findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
@@ -40,4 +53,78 @@ class MapsActivity : AppCompatActivity(), OnMapReadyCallback {
         mMap.addMarker(MarkerOptions().position(sydney).title("Marker in Sydney"))
         mMap.moveCamera(CameraUpdateFactory.newLatLng(sydney))
     }
+
+    fun clickButtonLocation(view:View){
+        startFetchAddressIntentService()
+    }
+
+    @SuppressLint("MissingPermission")
+    fun showMyCurrentLocation(){
+        if(mMap!=null){
+            var permisos = arrayOf(android.Manifest.permission.ACCESS_FINE_LOCATION,android.Manifest.permission.ACCESS_COARSE_LOCATION)
+            if (hasPermission(permisos)){
+                mMap.isMyLocationEnabled =true
+                var fusedLocationClient = LocationServices.getFusedLocationProviderClient(this);
+                fusedLocationClient.getLastLocation()
+                    .addOnSuccessListener(this) {
+                        location->
+                            if (location!=null){
+                                addMarkerAndZoom(location,"me",15);
+                            }
+
+                    }
+            }else{
+                ActivityCompat.requestPermissions( this, permisos, 2 );
+            }
+        }
+    }
+
+    fun addMarkerAndZoom(location:Location, title:String, zoom: Int){
+        var myLocation = LatLng( location.latitude, location.longitude);
+        mMap.addMarker( MarkerOptions().position( myLocation ).title( title ) );
+        mMap.moveCamera( CameraUpdateFactory.newLatLngZoom( myLocation, zoom.toFloat()));
+
+    }
+
+    fun hasPermission(permisos:Array<String>):Boolean{
+        for ( permission  in permisos )
+        {
+            if ( ContextCompat.checkSelfPermission( this, permission ) == PackageManager.PERMISSION_DENIED )
+            {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<out String>,
+        grantResults: IntArray
+    ) {
+        for ( grantResult in grantResults )
+        {
+            if ( grantResult == -1 )
+            {
+                return;
+            }
+        }
+        when (requestCode){
+            44 ->{
+                showMyCurrentLocation();
+                return
+            }
+                else-> super.onRequestPermissionsResult( requestCode, permissions, grantResults );
+            }
+        }
+
+     @SuppressLint("MissingPermission")
+     fun startFetchAddressIntentService(){
+         fusedLocationClient.lastLocation.addOnSuccessListener(this) {
+             location:Location->{
+             var addressResultReceiver = AddressResultReceiver( Handler())
+             print("--------------------------------------"+location.toString())
+         }
+         }
+     }
 }
