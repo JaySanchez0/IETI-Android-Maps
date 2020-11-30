@@ -22,3 +22,7 @@ Jeisson G. Sanchez Ramos.
 ![img](img/3.jpg)
 
 ![img](img/4.jpg)
+
+### Nota:
+
+Si el mapa no carga correctamente, cambia el api key y no olvida registrar el paquete y la firma
